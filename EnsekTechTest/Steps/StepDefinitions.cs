@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using TechTalk.SpecFlow;
 
 namespace EnsekTechTest.Steps
@@ -81,7 +83,7 @@ namespace EnsekTechTest.Steps
         public void WhenIPurchaseUnitsOfFuel(int quantity, int fuelId)
         {
             var client = new RestClient();
-            var request = new RestRequest($"{Settings.BaseUrl}/ENSEK/buy/{fuelId}/{quantity}", Method.Put);
+            var request = new RestRequest($"{Settings.BaseUrl}/buy/{fuelId}/{quantity}", Method.Put);
 
             var response = client.Execute(request);
 
@@ -181,6 +183,22 @@ namespace EnsekTechTest.Steps
             price.Should().Be(originalPrice * p0);
         }
 
+        [Then(@"the number of orders made before today is (.*)")]
+        public void ThenTheNumberOfOrdersMadeBeforeTodayIs(int p0)
+        {
+            var client = new RestClient();
+            var request = new RestRequest($"{Settings.BaseUrl}/orders", Method.Get);
+
+            var response = client.Execute(request);
+
+            response.IsSuccessStatusCode.Should().BeTrue();
+            
+            var orders = JsonConvert.DeserializeObject<List<Order>>(response.Content);
+            var countOfOrders = orders.Where(o => o.ts_time < DateTime.Today).Count();
+
+            countOfOrders.Should().Be(p0);
+            
+        }
 
 
 
